@@ -1,0 +1,68 @@
+version: "3.9"
+
+services:
+  front:
+    container_name: nuxt_app
+    build:
+      context: .
+      dockerfile: ./docker/front/Dockerfile
+    volumes:
+      - ./nuxt:/nuxt:cached
+      - nuxt_node_modules:/nuxt/node_modules
+    ports:
+      - "3000:3000"
+      - "24678:24678"
+    tty: true
+    environment:
+      - HOST=0.0.0.0
+      - port=3000
+      - CHOKIDAR_USEPOLLING=true
+    command: sh -c "yarn && yarn dev"
+    depends_on:
+      - app
+      - db
+  app:
+    container_name: laravel_app
+    build:
+      context: .
+      dockerfile: ./docker/php/Dockerfile
+    ports:
+      - 5173:5173
+    volumes:
+      - ./laravel/:/var/www/html
+    environment:
+      - DB_CONNECTION=mysql
+      - DB_HOST=db
+      - DB_PORT=3306
+      - DB_DATABASE=${DB_NAME}
+      - DB_USERNAME=${DB_USER}
+      - DB_PASSWORD=${DB_PASSWORD}
+  web:
+    container_name: nginx_container
+    build:
+      context: .
+      dockerfile: ./docker/nginx/Dockerfile
+    ports:
+      - ${WEB_PORT}:80
+    depends_on:
+      - app
+    volumes:
+      - ./laravel/:/var/www/html
+  db:
+    container_name: mysql_container
+    build:
+      context: .
+      dockerfile: ./docker/mysql/Dockerfile
+    ports:
+      - ${DB_PORT}:3306
+    environment:
+      MYSQL_DATABASE: ${DB_NAME}
+      MYSQL_USER: ${DB_USER}
+      MYSQL_PASSWORD: ${DB_PASSWORD}
+      MYSQL_ROOT_PASSWORD: ${DB_ROOT_PASSWORD}
+      TZ: "Asia/Tokyo"
+    volumes:
+      - mysql-volume:/var/lib/mysql
+volumes:
+  nuxt_node_modules:
+  mysql-volume:
