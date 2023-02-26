@@ -6,6 +6,12 @@
 cp .env.example .env
 ```
 
+## コンテナを構築 & 立ち上げる
+
+```bash
+docker compose up -d
+```
+
 ## Nuxt 環境構築
 
 ### コンテナに入る
